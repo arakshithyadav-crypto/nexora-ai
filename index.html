@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NEXORA AI</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+
+        <div class="logo">
+            ✦ NEXORA <span>AI</span>
+        </div>
+
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#doubt">Doubt Solver</a>
+            <a href="#quiz">Quiz Generator</a>
+        </nav>
+
+    </header>
+
+
+    <!-- HERO -->
+    <section id="home" class="hero">
+
+        <div class="hero-content">
+
+            <div class="badge">
+                🤖 POWERED BY LOCAL AI
+            </div>
+
+            <h1>
+                Learn Anything.<br>
+                <span>Master Everything.</span>
+            </h1>
+
+            <p>
+                Ask questions, solve doubts and generate quizzes
+                with your personal AI learning companion.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="#doubt" class="primary-button">
+                    🤖 Ask a Doubt
+                </a>
+
+                <a href="#quiz" class="secondary-button">
+                    🎯 Generate Quiz
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FEATURES -->
+    <section class="features">
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                🤖
+            </div>
+
+            <h2>AI Doubt Solver</h2>
+
+            <p>
+                Ask NEXORA AI questions about mathematics,
+                science, coding, history, languages and more.
+            </p>
+
+            <a href="#doubt">
+                Try it →
+            </a>
+
+        </div>
+
+
+        <div class="feature-card">
+
+            <div class="feature-icon">
+                🎯
+            </div>
+
+            <h2>AI Quiz Generator</h2>
+
+            <p>
+                Enter any topic and let NEXORA AI create
+                a practice quiz for you.
+            </p>
+
+            <a href="#quiz">
+                Create Quiz →
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- AI DOUBT SOLVER -->
+    <section id="doubt" class="tool-section">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                01 • UNDERSTAND
+            </div>
+
+            <h2>
+                AI Doubt Solver
+            </h2>
+
+            <p>
+                Ask NEXORA AI anything you want to learn.
+            </p>
+
+        </div>
+
+
+        <div class="tool-card">
+
+            <label for="subject">
+                Subject
+            </label>
+
+            <select id="subject">
+
+                <option value="General">
+                    General
+                </option>
+
+                <option value="Mathematics">
+                    Mathematics
+                </option>
+
+                <option value="Science">
+                    Science
+                </option>
+
+                <option value="Physics">
+                    Physics
+                </option>
+
+                <option value="Chemistry">
+                    Chemistry
+                </option>
+
+                <option value="Biology">
+                    Biology
+                </option>
+
+                <option value="History">
+                    History
+                </option>
+
+                <option value="Geography">
+                    Geography
+                </option>
+
+                <option value="Computer Science">
+                    Computer Science
+                </option>
+
+                <option value="Languages">
+                    Languages
+                </option>
+
+            </select>
+
+
+            <label for="doubtQuestion">
+                Your Question
+            </label>
+
+            <textarea
+                id="doubtQuestion"
+                placeholder="Example: Explain Newton's second law in simple words..."
+            ></textarea>
+
+
+            <button
+                class="action-button"
+                onclick="solveDoubt()"
+            >
+                ✨ Solve My Doubt
+            </button>
+
+
+            <div
+                id="doubtAnswer"
+                class="answer-box"
+            >
+                <div class="answer-title">
+                    🤖 NEXORA AI
+                </div>
+
+                <p>
+                    Your AI answer will appear here.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- QUIZ GENERATOR -->
+    <section id="quiz" class="tool-section">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                02 • PRACTICE
+            </div>
+
+            <h2>
+                AI Quiz Generator
+            </h2>
+
+            <p>
+                Create a quiz about almost anything.
+            </p>
+
+        </div>
+
+
+        <div class="tool-card">
+
+            <label for="quizTopic">
+                Topic
+            </label>
+
+            <input
+                id="quizTopic"
+                type="text"
+                placeholder="Example: Photosynthesis"
+            >
+
+
+            <label for="quizDifficulty">
+                Difficulty
+            </label>
+
+            <select id="quizDifficulty">
+
+                <option value="Easy">
+                    Easy
+                </option>
+
+                <option value="Medium">
+                    Medium
+                </option>
+
+                <option value="Hard">
+                    Hard
+                </option>
+
+            </select>
+
+
+            <label for="quizNumber">
+                Number of Questions
+            </label>
+
+            <select id="quizNumber">
+
+                <option value="5">
+                    5
+                </option>
+
+                <option value="10">
+                    10
+                </option>
+
+                <option value="15">
+                    15
+                </option>
+
+            </select>
+
+
+            <button
+                class="action-button"
+                onclick="generateQuiz()"
+            >
+                🎯 Generate Quiz
+            </button>
+
+
+            <div
+                id="quizBox"
+                class="quiz-box"
+            >
+                Your generated quiz will appear here.
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <div class="logo">
+            ✦ NEXORA <span>AI</span>
+        </div>
+
+        <p>
+            Ask. Learn. Master.
+        </p>
+
+        <small>
+            NEXORA AI • Powered by Ollama
+        </small>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="script.js?v=2"></script>
+
+</body>
+</html>
