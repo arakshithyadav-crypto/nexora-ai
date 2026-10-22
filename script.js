@@ -1,8 +1,7 @@
+```javascript
 // =====================================
-// NEXORA AI
-// COMPLETE CLEAN SCRIPT
+// NEXORA AI — ONLINE VERSION
 // =====================================
-
 
 // =====================================
 // AI DOUBT SOLVER
@@ -10,15 +9,27 @@
 
 async function solveDoubt() {
 
-    const question =
-        document.getElementById("doubtQuestion").value.trim();
+    const questionInput =
+        document.getElementById("doubtQuestion");
 
-    const subject =
-        document.getElementById("subject").value;
+    const subjectInput =
+        document.getElementById("subject");
 
     const answerBox =
         document.getElementById("doubtAnswer");
 
+    if (!questionInput || !answerBox) {
+        console.error("NEXORA: Required HTML elements not found.");
+        return;
+    }
+
+    const question =
+        questionInput.value.trim();
+
+    const subject =
+        subjectInput
+            ? subjectInput.value
+            : "General";
 
     if (!question) {
 
@@ -35,7 +46,6 @@ async function solveDoubt() {
         return;
     }
 
-
     answerBox.innerHTML = `
         <div class="answer-title">
             🤖 NEXORA AI
@@ -49,40 +59,52 @@ async function solveDoubt() {
         <div id="streamedAnswer"></div>
     `;
 
-
     const output =
         document.getElementById("streamedAnswer");
 
-
     try {
 
-        const response =
-            await fetch("/api/ask", {
+        console.log("NEXORA: Sending question...");
 
+        const response = await fetch(
+            "/api/ask",
+            {
                 method: "POST",
 
                 headers: {
-                    "Content-Type":
-                        "application/json"
+                    "Content-Type": "application/json"
                 },
 
                 body: JSON.stringify({
-
                     question:
 `Subject: ${subject}
 
 Student question:
 ${question}`
-
                 })
+            }
+        );
 
-            });
-
+        console.log(
+            "NEXORA: Response status:",
+            response.status
+        );
 
         if (!response.ok) {
-            throw new Error("AI request failed");
+
+            const errorText =
+                await response.text();
+
+            throw new Error(
+                `Server error ${response.status}: ${errorText}`
+            );
         }
 
+        if (!response.body) {
+            throw new Error(
+                "No response stream received."
+            );
+        }
 
         const reader =
             response.body.getReader();
@@ -90,9 +112,7 @@ ${question}`
         const decoder =
             new TextDecoder();
 
-
         let answer = "";
-
 
         while (true) {
 
@@ -101,11 +121,9 @@ ${question}`
                 done
             } = await reader.read();
 
-
             if (done) {
                 break;
             }
-
 
             answer += decoder.decode(
                 value,
@@ -114,36 +132,53 @@ ${question}`
                 }
             );
 
-
             output.innerHTML =
                 formatAnswer(answer);
         }
 
+        answer += decoder.decode();
+
+        output.innerHTML =
+            formatAnswer(answer);
 
         const orb =
             document.getElementById(
                 "thinkingOrb"
             );
 
+        if (orb) {
+            orb.remove();
+        }
+
+        console.log(
+            "NEXORA: AI response completed."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "NEXORA AI ERROR:",
+            error
+        );
+
+        const orb =
+            document.getElementById(
+                "thinkingOrb"
+            );
 
         if (orb) {
             orb.remove();
         }
 
-
-    } catch (error) {
-
-        console.error(error);
-
-
         output.innerHTML = `
-            ❌ Could not connect to
-            NEXORA AI.
+            ❌ NEXORA AI could not connect
+            to the AI service.
 
             <br><br>
 
-            Make sure Flask and Ollama
-            are running.
+            <small>
+                Please try again in a few seconds.
+            </small>
         `;
     }
 }
@@ -178,24 +213,18 @@ async function generateQuiz() {
             .value
             .trim();
 
-
     const difficulty =
         document
             .getElementById("quizDifficulty")
             .value;
-
 
     const number =
         document
             .getElementById("quizNumber")
             .value;
 
-
     const quizBox =
-        document.getElementById(
-            "quizBox"
-        );
-
+        document.getElementById("quizBox");
 
     if (!topic) {
 
@@ -204,11 +233,6 @@ async function generateQuiz() {
 
         return;
     }
-
-
-    // =================================
-    // LOADING SCREEN
-    // =================================
 
     quizBox.innerHTML = `
 
@@ -220,7 +244,6 @@ async function generateQuiz() {
                 🤖 Creating your quiz...
             </h3>
 
-
             <div class="progress-container">
 
                 <div
@@ -230,7 +253,6 @@ async function generateQuiz() {
 
             </div>
 
-
             <div
                 id="quizProgressText"
                 class="quiz-progress-text">
@@ -239,7 +261,6 @@ async function generateQuiz() {
 
             </div>
 
-
             <p id="quizLoadingMessage">
 
                 Understanding your topic...
@@ -247,24 +268,13 @@ async function generateQuiz() {
             </p>
 
         </div>
-
     `;
-
-
-    // =================================
-    // START PROGRESS
-    // =================================
 
     fakeProgress = 0;
 
-
     if (progressTimer) {
-
-        clearInterval(
-            progressTimer
-        );
+        clearInterval(progressTimer);
     }
-
 
     progressTimer =
         setInterval(() => {
@@ -276,13 +286,9 @@ async function generateQuiz() {
                         Math.random() * 4
                     ) + 1;
 
-
                 if (fakeProgress > 90) {
-
                     fakeProgress = 90;
-
                 }
-
 
                 updateQuizProgress(
                     fakeProgress
@@ -290,11 +296,6 @@ async function generateQuiz() {
             }
 
         }, 500);
-
-
-    // =================================
-    // AI PROMPT
-    // =================================
 
     const prompt = `
 
@@ -337,9 +338,7 @@ Rules:
 - Return ONLY JSON.
 - No markdown.
 - No text outside JSON.
-
 `;
-
 
     try {
 
@@ -347,7 +346,6 @@ Rules:
             await fetch(
                 "/api/quiz",
                 {
-
                     method: "POST",
 
                     headers: {
@@ -356,26 +354,16 @@ Rules:
                     },
 
                     body: JSON.stringify({
-
                         question: prompt
-
                     })
-
                 }
             );
 
-
         if (!response.ok) {
-
             throw new Error(
-                "Quiz request failed"
+                `Quiz server error: ${response.status}`
             );
         }
-
-
-        // =================================
-        // READ AI RESPONSE
-        // =================================
 
         const reader =
             response.body.getReader();
@@ -383,9 +371,7 @@ Rules:
         const decoder =
             new TextDecoder();
 
-
         let result = "";
-
 
         while (true) {
 
@@ -394,11 +380,9 @@ Rules:
                 done
             } = await reader.read();
 
-
             if (done) {
                 break;
             }
-
 
             result += decoder.decode(
                 value,
@@ -406,28 +390,18 @@ Rules:
                     stream: true
                 }
             );
-
         }
 
-
-        // =================================
-        // FINISH PROGRESS
-        // =================================
+        result += decoder.decode();
 
         clearInterval(
             progressTimer
         );
 
-
         updateQuizProgress(
             100,
             "Quiz ready! 🎯"
         );
-
-
-        // =================================
-        // CLEAN AI RESPONSE
-        // =================================
 
         result =
             result
@@ -441,29 +415,20 @@ Rules:
                 )
                 .trim();
 
-
-        // =================================
-        // FIND JSON
-        // =================================
-
         const firstBrace =
             result.indexOf("{");
 
-
         const lastBrace =
             result.lastIndexOf("}");
-
 
         if (
             firstBrace === -1 ||
             lastBrace === -1
         ) {
-
             throw new Error(
                 "AI did not return valid JSON"
             );
         }
-
 
         result =
             result.substring(
@@ -471,14 +436,8 @@ Rules:
                 lastBrace + 1
             );
 
-
-        // =================================
-        // PARSE QUIZ
-        // =================================
-
         const quizData =
             JSON.parse(result);
-
 
         if (
             !quizData.questions ||
@@ -486,16 +445,13 @@ Rules:
                 quizData.questions
             )
         ) {
-
             throw new Error(
                 "Invalid quiz format"
             );
         }
 
-
         quizQuestions =
             quizData.questions;
-
 
         currentQuestion = 0;
 
@@ -503,17 +459,10 @@ Rules:
 
         answerSelected = false;
 
-
-        // =================================
-        // SHOW FIRST QUESTION
-        // =================================
-
-        setTimeout(() => {
-
-            showQuizQuestion();
-
-        }, 500);
-
+        setTimeout(
+            showQuizQuestion,
+            500
+        );
 
     } catch (error) {
 
@@ -521,12 +470,10 @@ Rules:
             progressTimer
         );
 
-
         console.error(
             "NEXORA QUIZ ERROR:",
             error
         );
-
 
         quizBox.innerHTML = `
 
@@ -537,11 +484,9 @@ Rules:
 
             </div>
 
-
             <p>
                 Please try again.
             </p>
-
         `;
     }
 }
@@ -561,43 +506,32 @@ function updateQuizProgress(
             "quizProgressBar"
         );
 
-
     const text =
         document.getElementById(
             "quizProgressText"
         );
-
 
     const loadingMessage =
         document.getElementById(
             "quizLoadingMessage"
         );
 
-
     if (bar) {
-
         bar.style.width =
             percent + "%";
-
     }
-
 
     if (text) {
-
         text.textContent =
             percent + "%";
-
     }
 
-
     if (loadingMessage) {
-
         loadingMessage.textContent =
             message ||
             getQuizLoadingMessage(
                 percent
             );
-
     }
 }
 
@@ -611,32 +545,20 @@ function getQuizLoadingMessage(
 ) {
 
     if (percent < 20) {
-
         return "Understanding your topic...";
-
     }
-
 
     if (percent < 40) {
-
         return "Creating questions...";
-
     }
-
 
     if (percent < 60) {
-
         return "Building answer options...";
-
     }
-
 
     if (percent < 80) {
-
         return "Adding explanations...";
-
     }
-
 
     return "Finalizing your quiz...";
 }
@@ -653,7 +575,6 @@ function showQuizQuestion() {
             "quizBox"
         );
 
-
     if (
         currentQuestion >=
         quizQuestions.length
@@ -664,15 +585,12 @@ function showQuizQuestion() {
         return;
     }
 
-
     answerSelected = false;
-
 
     const question =
         quizQuestions[
             currentQuestion
         ];
-
 
     if (
         !question ||
@@ -692,21 +610,16 @@ function showQuizQuestion() {
 
             </div>
 
-
             <button
                 class="next-question"
                 onclick="generateQuiz()"
             >
-
                 🔄 Generate Again
-
             </button>
-
         `;
 
         return;
     }
-
 
     let html = `
 
@@ -719,7 +632,6 @@ function showQuizQuestion() {
 
         </div>
 
-
         <h3 class="quiz-question">
 
             ${escapeHTML(
@@ -728,11 +640,8 @@ function showQuizQuestion() {
 
         </h3>
 
-
         <div class="quiz-options">
-
     `;
-
 
     question.options.forEach(
         (option, index) => {
@@ -741,44 +650,32 @@ function showQuizQuestion() {
 
                 <button
                     class="quiz-option"
-                    onclick="
-                        selectAnswer(${index})
-                    "
+                    onclick="selectAnswer(${index})"
                 >
 
                     <span
                         class="option-letter"
                     >
-
                         ${String.fromCharCode(
                             65 + index
                         )}
-
                     </span>
-
 
                     ${escapeHTML(
                         option
                     )}
 
                 </button>
-
             `;
         }
     );
-
 
     html += `
 
         </div>
 
-
-        <div
-            id="quizFeedback">
-        </div>
-
+        <div id="quizFeedback"></div>
     `;
-
 
     quizBox.innerHTML =
         html;
@@ -797,40 +694,28 @@ function selectAnswer(
         return;
     }
 
-
     answerSelected = true;
-
 
     const question =
         quizQuestions[
             currentQuestion
         ];
 
-
     const options =
         document.querySelectorAll(
             ".quiz-option"
         );
-
 
     const feedback =
         document.getElementById(
             "quizFeedback"
         );
 
-
     options.forEach(
         button => {
-
             button.disabled = true;
-
         }
     );
-
-
-    // =================================
-    // CORRECT
-    // =================================
 
     if (
         selectedIndex ===
@@ -839,26 +724,20 @@ function selectAnswer(
 
         quizScore++;
 
-
         options[selectedIndex]
             .classList.add(
                 "correct"
             );
 
-
         playQuizSound(
             "correct"
         );
 
-
         feedback.innerHTML = `
 
             <div class="quiz-correct">
-
                 ✅ Correct!
-
             </div>
-
 
             <div class="quiz-explanation">
 
@@ -866,35 +745,23 @@ function selectAnswer(
                     💡 Explanation
                 </strong>
 
-
                 <p>
-
                     ${escapeHTML(
                         question.explanation ||
                         "This is the correct answer."
                     )}
-
                 </p>
 
             </div>
-
 
             <button
                 class="next-question"
                 onclick="nextQuestion()"
             >
-
                 Next →
-
             </button>
-
         `;
     }
-
-
-    // =================================
-    // WRONG
-    // =================================
 
     else {
 
@@ -903,7 +770,6 @@ function selectAnswer(
                 "wrong"
             );
 
-
         options[
             question.answer
         ]
@@ -911,37 +777,29 @@ function selectAnswer(
                 "correct"
             );
 
-
         playQuizSound(
             "wrong"
         );
 
-
         feedback.innerHTML = `
 
             <div class="quiz-wrong">
-
                 ❌ Incorrect!
-
             </div>
-
 
             <div class="correct-answer">
 
                 Correct answer:
 
                 <strong>
-
                     ${escapeHTML(
                         question.options[
                             question.answer
                         ]
                     )}
-
                 </strong>
 
             </div>
-
 
             <div class="quiz-explanation">
 
@@ -949,28 +807,21 @@ function selectAnswer(
                     💡 Explanation
                 </strong>
 
-
                 <p>
-
                     ${escapeHTML(
                         question.explanation ||
                         "This is why the correct answer is correct."
                     )}
-
                 </p>
 
             </div>
-
 
             <button
                 class="next-question"
                 onclick="nextQuestion()"
             >
-
                 Next →
-
             </button>
-
         `;
     }
 }
@@ -992,35 +843,27 @@ function nextQuestion() {
 // QUIZ SOUND
 // =====================================
 
-function playQuizSound(
-    type
-) {
+function playQuizSound(type) {
 
     const AudioContext =
         window.AudioContext ||
         window.webkitAudioContext;
 
-
     if (!AudioContext) {
         return;
     }
 
-
     const audio =
         new AudioContext();
-
 
     const oscillator =
         audio.createOscillator();
 
-
     const gain =
         audio.createGain();
 
-
     oscillator.type =
         "sine";
-
 
     if (type === "correct") {
 
@@ -1028,7 +871,6 @@ function playQuizSound(
             523,
             audio.currentTime
         );
-
 
         oscillator.frequency.exponentialRampToValueAtTime(
             784,
@@ -1042,19 +884,16 @@ function playQuizSound(
             audio.currentTime
         );
 
-
         oscillator.frequency.exponentialRampToValueAtTime(
             120,
             audio.currentTime + 0.2
         );
     }
 
-
     gain.gain.setValueAtTime(
         0.15,
         audio.currentTime
     );
-
 
     gain.gain.exponentialRampToValueAtTime(
         0.001,
@@ -1066,156 +905,15 @@ function playQuizSound(
         )
     );
 
-
     oscillator.connect(gain);
 
     gain.connect(
         audio.destination
     );
 
-
     oscillator.start();
-
 
     oscillator.stop(
         audio.currentTime +
         (
-            type === "correct"
-                ? 0.35
-                : 0.3
-        )
-    );
-}
-
-
-// =====================================
-// FINAL RESULT
-// =====================================
-
-function showQuizResult() {
-
-    const quizBox =
-        document.getElementById(
-            "quizBox"
-        );
-
-
-    const total =
-        quizQuestions.length;
-
-
-    const percentage =
-        total > 0
-            ? Math.round(
-                (quizScore / total) * 100
-            )
-            : 0;
-
-
-    quizBox.innerHTML = `
-
-        <div class="quiz-result">
-
-            <div class="result-icon">
-                🏆
-            </div>
-
-
-            <h2>
-                Quiz Complete!
-            </h2>
-
-
-            <p class="score">
-
-                ${quizScore}
-                /
-                ${total}
-
-            </p>
-
-
-            <p>
-
-                You scored
-
-                <strong>
-                    ${percentage}%
-                </strong>
-
-            </p>
-
-
-            <button
-                class="next-question"
-                onclick="generateQuiz()"
-            >
-
-                🔄 Try Again
-
-            </button>
-
-        </div>
-
-    `;
-}
-
-
-// =====================================
-// FORMAT AI ANSWER
-// =====================================
-
-function formatAnswer(text) {
-
-    if (!text) {
-        return "";
-    }
-
-
-    return escapeHTML(text)
-
-        .replace(
-            /\n\n/g,
-            "<br><br>"
-        )
-
-        .replace(
-            /\n/g,
-            "<br>"
-        );
-}
-
-
-// =====================================
-// SECURITY
-// =====================================
-
-function escapeHTML(text) {
-
-    return String(text)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-}
+            type === "correct
