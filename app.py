@@ -1,16 +1,11 @@
 from flask import Flask, request, jsonify, send_from_directory, Response
 import requests
 import os
-import json
 
 app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-
-GEMINI_MODEL = os.environ.get(
-    "GEMINI_MODEL",
-    "gemini-2.5-flash"
-)
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 @app.route("/")
@@ -26,9 +21,7 @@ def files(filename):
 def ask_gemini(prompt):
 
     if not GEMINI_API_KEY:
-        raise Exception(
-            "GEMINI_API_KEY is missing."
-        )
+        raise Exception("GEMINI_API_KEY is missing.")
 
     url = (
         "https://generativelanguage.googleapis.com"
@@ -38,11 +31,9 @@ def ask_gemini(prompt):
 
     response = requests.post(
         url,
-
         headers={
             "Content-Type": "application/json"
         },
-
         json={
             "contents": [
                 {
@@ -53,12 +44,10 @@ def ask_gemini(prompt):
                     ]
                 }
             ],
-
             "generationConfig": {
                 "temperature": 0.3
             }
         },
-
         timeout=120
     )
 
@@ -66,19 +55,16 @@ def ask_gemini(prompt):
 
     result = response.json()
 
-    candidates = result.get(
-        "candidates",
-        []
-    )
+    candidates = result.get("candidates", [])
 
     if not candidates:
-        raise Exception(
-            "Gemini returned no answer."
-        )
+        raise Exception("Gemini returned no answer.")
 
-    parts = candidates[0] \
-        .get("content", {}) \
-        .get("parts", [])
+    parts = candidates[0].get(
+        "content", {}
+    ).get(
+        "parts", []
+    )
 
     answer = ""
 
@@ -89,9 +75,7 @@ def ask_gemini(prompt):
             answer += text
 
     if not answer:
-        raise Exception(
-            "Gemini returned an empty answer."
-        )
+        raise Exception("Gemini returned an empty answer.")
 
     return answer
 
@@ -138,14 +122,10 @@ Student question:
 
     except Exception as error:
 
-        print(
-            "DOUBT ERROR:",
-            error
-        )
+        print("DOUBT ERROR:", error)
 
         return Response(
-            "❌ NEXORA AI could not connect "
-            "to the AI service.",
+            "❌ NEXORA AI could not connect to the AI service.",
             content_type="text/plain; charset=utf-8"
         )
 
@@ -176,10 +156,7 @@ def quiz_ai():
 
     except Exception as error:
 
-        print(
-            "QUIZ ERROR:",
-            error
-        )
+        print("QUIZ ERROR:", error)
 
         return Response(
             "❌ Quiz generation failed.",
@@ -192,10 +169,7 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=int(
-            os.environ.get(
-                "PORT",
-                5000
-            )
+            os.environ.get("PORT", 5000)
         ),
         debug=False
     )
