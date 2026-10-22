@@ -7,16 +7,11 @@ app = Flask(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# We will set this in Render later.
 GEMINI_MODEL = os.environ.get(
     "GEMINI_MODEL",
     "gemini-2.5-flash"
 )
 
-
-# =====================================
-# WEBSITE
-# =====================================
 
 @app.route("/")
 def home():
@@ -28,19 +23,17 @@ def files(filename):
     return send_from_directory(".", filename)
 
 
-# =====================================
-# GEMINI
-# =====================================
-
 def ask_gemini(prompt):
 
     if not GEMINI_API_KEY:
-        raise Exception("GEMINI_API_KEY is missing.")
+        raise Exception(
+            "GEMINI_API_KEY is missing."
+        )
 
     url = (
         "https://generativelanguage.googleapis.com"
-        f"/v1beta/models/{GEMINI_MODEL}:streamGenerateContent"
-        f"?alt=sse&key={GEMINI_API_KEY}"
+        f"/v1beta/models/{GEMINI_MODEL}:generateContent"
+        f"?key={GEMINI_API_KEY}"
     )
 
     response = requests.post(
@@ -66,62 +59,42 @@ def ask_gemini(prompt):
             }
         },
 
-        stream=True,
         timeout=120
     )
 
     response.raise_for_status()
 
-    for line in response.iter_lines(
-        decode_unicode=True
-    ):
+    result = response.json()
 
-        if not line:
-            continue
+    candidates = result.get(
+        "candidates",
+        []
+    )
 
-        if line.startswith("data:"):
+    if not candidates:
+        raise Exception(
+            "Gemini returned no answer."
+        )
 
-            data = line[5:].strip()
+    parts = candidates[0] \
+        .get("content", {}) \
+        .get("parts", [])
 
-            try:
+    answer = ""
 
-                result = json.loads(data)
+    for part in parts:
+        text = part.get("text", "")
 
-                candidates = result.get(
-                    "candidates",
-                    []
-                )
+        if text:
+            answer += text
 
-                if not candidates:
-                    continue
+    if not answer:
+        raise Exception(
+            "Gemini returned an empty answer."
+        )
 
-                content = candidates[0].get(
-                    "content",
-                    {}
-                )
+    return answer
 
-                parts = content.get(
-                    "parts",
-                    []
-                )
-
-                for part in parts:
-
-                    text = part.get(
-                        "text",
-                        ""
-                    )
-
-                    if text:
-                        yield text
-
-            except json.JSONDecodeError:
-                continue
-
-
-# =====================================
-# DOUBT SOLVER
-# =====================================
 
 @app.route("/api/ask", methods=["POST"])
 def ask_ai():
@@ -134,16 +107,13 @@ def ask_ai():
     ).strip()
 
     if not question:
-
         return jsonify({
             "error": "Question is empty"
         }), 400
 
-    def generate():
+    try:
 
-        try:
-
-            prompt = f"""
+        prompt = f"""
 You are NEXORA AI, an educational AI assistant.
 
 Help the student understand the answer clearly.
@@ -159,30 +129,26 @@ Student question:
 {question}
 """
 
-            for text in ask_gemini(prompt):
-                yield text
+        answer = ask_gemini(prompt)
 
-        except Exception as error:
+        return Response(
+            answer,
+            content_type="text/plain; charset=utf-8"
+        )
 
-            print(
-                "DOUBT ERROR:",
-                error
-            )
+    except Exception as error:
 
-            yield (
-                "\n\n❌ NEXORA AI could not "
-                "connect to the AI service."
-            )
+        print(
+            "DOUBT ERROR:",
+            error
+        )
 
-    return Response(
-        generate(),
-        content_type="text/plain; charset=utf-8"
-    )
+        return Response(
+            "❌ NEXORA AI could not connect "
+            "to the AI service.",
+            content_type="text/plain; charset=utf-8"
+        )
 
-
-# =====================================
-# QUIZ GENERATOR
-# =====================================
 
 @app.route("/api/quiz", methods=["POST"])
 def quiz_ai():
@@ -195,46 +161,33 @@ def quiz_ai():
     ).strip()
 
     if not prompt:
-
         return jsonify({
             "error": "Quiz prompt is empty"
         }), 400
 
-    def generate():
+    try:
 
-        try:
+        answer = ask_gemini(prompt)
 
-            for text in ask_gemini(prompt):
-                yield text
+        return Response(
+            answer,
+            content_type="text/plain; charset=utf-8"
+        )
 
-        except Exception as error:
+    except Exception as error:
 
-            print(
-                "QUIZ ERROR:",
-                error
-            )
+        print(
+            "QUIZ ERROR:",
+            error
+        )
 
-            yield (
-                "\n\n❌ Quiz generation failed."
-            )
+        return Response(
+            "❌ Quiz generation failed.",
+            content_type="text/plain; charset=utf-8"
+        )
 
-    return Response(
-        generate(),
-        content_type="text/plain; charset=utf-8"
-    )
-
-
-# =====================================
-# START
-# =====================================
 
 if __name__ == "__main__":
-
-    print("")
-    print("=====================================")
-    print("       NEXORA AI ONLINE")
-    print("=====================================")
-    print("")
 
     app.run(
         host="0.0.0.0",
