@@ -914,6 +914,12 @@ function playQuizSound(type) {
     oscillator.start();
 
     oscillator.stop(
-        audio.currentTime +
-        (
-            type === "correct
+    audio.currentTime +
+    (
+        type === "correct"
+            ? 0.35
+            : 0.3
+    )
+);
+
+}
